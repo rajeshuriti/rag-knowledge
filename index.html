@@ -34,18 +34,14 @@ h1 em{font-style:normal;color:var(--teal)}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
 .stat b{font-size:28px;display:block;line-height:1}
 .stat span{font-size:13px;color:var(--muted)}
-.pipeline{margin-top:22px;background:var(--ink);color:#fff;border-radius:16px;padding:20px;overflow:hidden}
+.pipeline{margin-top:22px;background:#111827;color:#fff;border-radius:16px;padding:20px;overflow:hidden}
 .pipeline h3{margin:0 0 4px;font-size:13px;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
 .pipeline p{margin:0 0 16px;opacity:.85;font-size:14px}
 .steps{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
-.step{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:12px}
+.step{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:12px;color:#fff}
 .step b,.step strong,.step span{color:#fff;font-size:22px;display:block}
 .step strong{font-size:13px}
 .step span{font-size:12px;opacity:.75;line-height:1.4}
-@media (prefers-color-scheme:light){
-  .step{color:#000;background:rgba(255,255,255,.25);border:1px solid rgba(0,0,0,.15)}
-  .step b,.step strong,.step span{color:#000}
-}
 .arrow{text-align:center;opacity:.5;font-size:12px;margin-top:6px}
 /* TOOLBAR */
 .toolbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 92%, transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 0}
