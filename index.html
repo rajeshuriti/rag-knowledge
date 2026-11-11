@@ -90,6 +90,14 @@ tr:last-child td{border-bottom:none}
 .callout{background:var(--amber-bg);border:1px solid var(--line);border-radius:12px;padding:18px}
 .footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
 .hidden{display:none !important}
+.step{cursor:pointer}
+.step:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.25);transition:.2s}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.modal.active{display:flex}
+.modal-card{background:var(--surface);color:var(--ink);border-radius:var(--radius);max-width:720px;width:100%;max-height:85vh;overflow:auto;padding:24px;border:1px solid var(--line)}
+.modal-card h3{margin-top:0;font-family:"Newsreader",serif;font-size:28px}
+.modal-card p{font-size:15px;line-height:1.6}
+.modal-close{float:right;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer;font-weight:700}
 @media(max-width:800px){ .stats{grid-template-columns:1fr 1fr} .steps{grid-template-columns:1fr 1fr} .cards,.qgrid{grid-template-columns:1fr} table{font-size:13px} }
 </style>
 </head>
@@ -288,6 +296,46 @@ var opts=[['all','All levels']].concat(LEVELS.map(function(L){return [String(L.i
 opts.forEach(function(o,i){ var b=document.createElement('button'); b.className='fbtn'+(i===0?' active':''); b.textContent=o[1]; b.addEventListener('click',function(){ activeLevel=o[0]; filters.querySelectorAll('.fbtn').forEach(function(x){x.classList.remove('active')}); b.classList.add('active'); applyFilter(); }); filters.appendChild(b); });
 document.getElementById('search').addEventListener('input',function(e){ query=e.target.value.trim().toLowerCase(); applyFilter(); });
 render();
+
+document.querySelectorAll('.step').forEach(function(el){
+  el.addEventListener('click', function(){
+    var title = el.querySelector('strong').textContent;
+    var desc = el.querySelector('span').textContent;
+    openStepModal(title, desc);
+  });
+});
+
+var stepDetails = {
+  'Ingest': '<p><strong>Purpose:</strong> Collect and clean raw documents from PDFs, web pages, Confluence, APIs, and databases.</p><p><strong>Key tasks:</strong> Parsing (text extraction + OCR for scanned PDFs), normalization (whitespace, encoding), deduplication, metadata extraction (title, headings, page, date, source URL, permissions). Use structured extraction to preserve tables and lists. Bad ingestion = broken RAG downstream.</p><p><strong>Tools:</strong> Unstructured.io, LlamaParse, PyPDF2, Playwright, LangChain Document Loaders.</p>',
+  'Chunk': '<p><strong>Purpose:</strong> Split documents into small, self-contained, searchable units for precise retrieval.</p><p><strong>Strategies:</strong> Fixed-size by tokens, recursive (paragraph → sentence → word), semantic chunking on topic boundaries, structure-aware (by headings/tables/code). Add 10–20% overlap to avoid splitting rules from conditions.</p><p><strong>Best practice:</strong> Aim for 300–500 tokens per chunk, respect semantic boundaries, prepend heading context.</p>',
+  'Embed': '<p><strong>Purpose:</strong> Convert each chunk into a dense vector so meaning can be compared mathematically.</p><p><strong>How it works:</strong> Embedding model maps text to high-dimensional vectors; similar meanings cluster together. Use cosine similarity for retrieval. The same model must be used for indexing and querying.</p><p><strong>Models:</strong> text-embedding-3-small/large, BGE, E5. Trade-off quality vs latency vs cost.</p>',
+  'Store': '<p><strong>Purpose:</strong> Persist vectors with metadata and permissions for fast retrieval.</p><p><strong>Components:</strong> Vector DB (Pinecone, Qdrant, pgvector, Weaviate), metadata store, ACLs. Support filtering by tenant, date, version. Use ANN indexes (HNSW/IVF) for sub-ms search at scale.</p><p><strong>Notes:</strong> Keep vectors, text, metadata and embedding model version together for reproducibility.</p>',
+  'Retrieve': '<p><strong>Purpose:</strong> Find the most relevant chunks for a user question.</p><p><strong>Flow:</strong> Embed question with same model, similarity search to get top-k candidates, apply metadata filters, rerank with cross-encoder or LLM for precision. Hybrid search combines vector + keyword BM25 for exact codes/IDs.</p><p><strong>Metric:</strong> Recall@k is primary – is needed evidence in top k?</p>',
+  'Generate': '<p><strong>Purpose:</strong> Produce grounded answers using retrieved evidence.</p><p><strong>Best practices:</strong> Prompt LLM to answer only from context, cite sources per claim, abstain if no evidence. Handle policy validity (effective dates, superseded docs). Post-process for citations and formatting.</p><p><strong>Failure mode:</strong> Hallucination when context is noisy or contradictory – reduce noise via reranking.</p>'
+};
+
+function openStepModal(name, short){
+  var modal = document.getElementById('stepModal');
+  var titleEl = document.getElementById('stepModalTitle');
+  var bodyEl = document.getElementById('stepModalBody');
+  titleEl.textContent = name;
+  bodyEl.innerHTML = '<p><em>'+short+'</em></p>'+(stepDetails[name]||'');
+  modal.classList.add('active');
+}
+function closeStepModal(){
+  document.getElementById('stepModal').classList.remove('active');
+}
+document.addEventListener('click', function(e){
+  var m = document.getElementById('stepModal');
+  if(e.target.id==='stepModal'){ closeStepModal(); }
+});
 </script>
+<div id="stepModal" class="modal" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeStepModal()">✕</button>
+    <h3 id="stepModalTitle"></h3>
+    <div id="stepModalBody"></div>
+  </div>
+</div>
 </body>
 </html>
